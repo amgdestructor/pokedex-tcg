@@ -138,13 +138,16 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .selected-card-img{width:80px;border-radius:6px;flex-shrink:0;cursor:pointer;}
 .selected-card-info{flex:1;min-width:0;}
 .selected-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
-.selected-card-set{font-size:11px;color:var(--text-muted);margin-bottom:6px;}
-.price-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
-.price-chip{padding:3px 9px;border-radius:8px;font-size:11px;font-weight:700;}
-.price-market{background:rgba(255,210,63,0.15);color:var(--yellow);border:1px solid rgba(255,210,63,0.3);}
-.price-low{background:rgba(46,204,113,0.12);color:var(--caught-border);border:1px solid rgba(46,204,113,0.25);}
-.price-high{background:rgba(227,53,13,0.12);color:var(--red-light);border:1px solid rgba(227,53,13,0.25);}
-.change-card-btn{font-size:10px;color:var(--text-muted);background:none;border:1px solid var(--card-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
+.selected-card-set{font-size:11px;color:var(--text-muted);margin-bottom:8px;}
+.price-manual-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.price-manual-label{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.price-manual-input{background:var(--darker);border:1.5px solid var(--card-border);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--yellow);font-family:'Nunito',sans-serif;outline:none;width:90px;transition:border-color 0.15s;}
+.price-manual-input:focus{border-color:var(--yellow);}
+.price-manual-input::placeholder{color:var(--text-muted);font-weight:400;}
+.cardmarket-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(0,115,61,0.2);border:1px solid rgba(0,180,80,0.4);border-radius:6px;color:#4cde8a;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;font-family:'Nunito',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.cardmarket-btn:hover{background:rgba(0,115,61,0.35);border-color:rgba(0,180,80,0.7);}
+.card-btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+.change-card-btn{font-size:10px;color:var(--text-muted);background:none;border:1px solid var(--card-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
 .change-card-btn:hover{border-color:var(--text-muted);color:var(--text);}
 
 .searching-indicator{text-align:center;padding:16px;color:var(--text-muted);font-size:12px;}
@@ -223,7 +226,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
     <div class="stat"><div class="stat-val" id="stat-caught">0</div><div class="stat-label">Tengo carta</div></div>
     <div class="stat"><div class="stat-val" id="stat-missing">0</div><div class="stat-label">Me faltan</div></div>
     <div class="stat"><div class="stat-val" id="stat-detail">0</div><div class="stat-label">⭐ Con detalle</div></div>
-    <div class="stat"><div class="stat-val green" id="stat-value">€0</div><div class="stat-label">Valor colección</div></div>
+    <div class="stat"><div class="stat-val green" id="stat-value">€0</div><div class="stat-label">Valor estimado</div></div>
     <div class="progress-wrap">
       <div class="progress-label"><span>Progreso</span><span id="progress-pct">0%</span></div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -314,7 +317,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
             </div>
             <div class="detail-field">
               <label>Idioma</label>
-              <select id="d-language">
+              <select id="d-language" onchange="updateCardmarketBtn()">
                 <option value="">— Elige —</option>
                 <option>Inglés</option>
                 <option>Español</option>
@@ -395,9 +398,7 @@ async function loadFromDB() {
         tcg_card_name: row.tcg_card_name || null,
         tcg_card_img:  row.tcg_card_img  || null,
         tcg_card_set:  row.tcg_card_set  || null,
-        tcg_price_market: row.tcg_price_market || null,
-        tcg_price_low:    row.tcg_price_low    || null,
-        tcg_price_high:   row.tcg_price_high   || null,
+        price_manual:  row.price_manual  || null,
       };
     });
     setSyncStatus('ok','● Conectado');
@@ -422,9 +423,7 @@ async function saveToDB(id) {
       tcg_card_name:    d.tcg_card_name || null,
       tcg_card_img:     d.tcg_card_img  || null,
       tcg_card_set:     d.tcg_card_set  || null,
-      tcg_price_market: d.tcg_price_market || null,
-      tcg_price_low:    d.tcg_price_low    || null,
-      tcg_price_high:   d.tcg_price_high   || null,
+      price_manual:     d.price_manual  || null,
       updated_at:       new Date().toISOString(),
     },{onConflict:'id'});
     if(error) throw error;
@@ -504,42 +503,58 @@ function selectCard(card) {
   document.querySelectorAll('.card-result-item').forEach(el => el.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
 
-  // Get prices (Cardmarket preferred, fallback TCGPlayer)
-  const prices = card.tcgplayer?.prices || {};
-  const cm = card.cardmarket?.prices || {};
-
-  const market = cm.averageSellPrice || cm.avg30 || prices?.holofoil?.market || prices?.normal?.market || null;
-  const low    = cm.lowPrice || prices?.holofoil?.low || prices?.normal?.low || null;
-  const high   = cm.avg7 || prices?.holofoil?.high || prices?.normal?.high || null;
-
   // Show selected card
-  const sec = document.getElementById('selected-card-section');
+  const sec  = document.getElementById('selected-card-section');
   const disp = document.getElementById('selected-card-display');
   sec.style.display = 'block';
 
-  let priceHtml = '';
-  if(market) priceHtml += `<span class="price-chip price-market">💶 ${market.toFixed(2)}€</span>`;
-  if(low)    priceHtml += `<span class="price-chip price-low">↓ ${low.toFixed(2)}€</span>`;
-  if(high)   priceHtml += `<span class="price-chip price-high">↑ ${high.toFixed(2)}€</span>`;
-  if(!priceHtml) priceHtml = '<span style="font-size:11px;color:var(--text-muted)">Sin precio disponible</span>';
+  const cardName = card.name || '';
+  const setName  = card.set?.name || '';
+  const cardNum  = card.number ? `${card.number}/${card.set?.printedTotal || '?'}` : '';
 
-  disp.innerHTML = `
-    <img class="selected-card-img" src="${card.images?.large || card.images?.small || ''}" alt="${card.name}">
+  disp.innerHTML = buildSelectedCardHTML(
+    card.images?.large || card.images?.small || '',
+    cardName,
+    setName,
+    cardNum,
+    collection[selectedId]?.price_manual || '',
+    collection[selectedId]?.language || ''
+  );
+
+  sec.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function buildSelectedCardHTML(imgUrl, cardName, setName, cardNum, priceVal, lang) {
+  return `
+    <img class="selected-card-img" src="${imgUrl}" alt="${cardName}">
     <div class="selected-card-info">
-      <div class="selected-card-name">${card.name}</div>
-      <div class="selected-card-set">${card.set?.name || ''} · ${card.number || ''}/${card.set?.printedTotal || '?'}</div>
-      <div class="price-row">${priceHtml}</div>
-      <button class="change-card-btn" onclick="changeCard()">✎ Cambiar carta</button>
+      <div class="selected-card-name">${cardName}</div>
+      <div class="selected-card-set">${setName}${cardNum ? ' · ' + cardNum : ''}</div>
+      <div class="price-manual-row">
+        <span class="price-manual-label">💶 Mi precio:</span>
+        <input type="number" class="price-manual-input" id="d-price" placeholder="0.00" step="0.01" min="0" value="${priceVal || ''}">
+        <span class="price-manual-label">€</span>
+      </div>
+      <div class="card-btn-row">
+        <a class="cardmarket-btn" id="cm-btn" href="${buildCardmarketUrl(cardName, lang)}" target="_blank" rel="noopener">
+          🛒 Ver en Cardmarket
+        </a>
+        <button class="change-card-btn" onclick="changeCard()">✎ Cambiar carta</button>
+      </div>
     </div>
   `;
+}
 
-  // Store prices for saving
-  selectedCardData._priceMarket = market;
-  selectedCardData._priceLow    = low;
-  selectedCardData._priceHigh   = high;
-
-  // Scroll to show the selected card
-  sec.scrollIntoView({behavior:'smooth', block:'nearest'});
+function buildCardmarketUrl(cardName, language) {
+  const langMap = {
+    'Inglés':'1','Japonés':'8','Coreano':'10','Español':'4',
+    'Alemán':'3','Francés':'2','Italiano':'5','Portugués':'6'
+  };
+  const langCode = langMap[language] || '';
+  const query = encodeURIComponent(cardName);
+  let url = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${query}`;
+  if (langCode) url += `&language=${langCode}`;
+  return url;
 }
 
 function changeCard() {
@@ -661,16 +676,16 @@ function updateStats(){
   const missing=total-caught;
   const pct=total?Math.round((caught/total)*100):0;
 
-  // Sum up all market prices
+  // Sum manual prices
   let totalValue = 0;
   Object.values(collection).forEach(d => {
-    if(d.tcg_price_market) totalValue += parseFloat(d.tcg_price_market);
+    if(d.price_manual) totalValue += parseFloat(d.price_manual);
   });
+  document.getElementById('stat-value').textContent = totalValue > 0 ? `€${totalValue.toFixed(2)}` : '€0';
 
   document.getElementById('stat-caught').textContent=caught;
   document.getElementById('stat-missing').textContent=missing;
   document.getElementById('stat-detail').textContent=detail;
-  document.getElementById('stat-value').textContent= totalValue > 0 ? `€${totalValue.toFixed(2)}` : '€0';
   document.getElementById('progress-pct').textContent=pct+'%';
   document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('total-badge').textContent=`${caught} / ${total}`;
@@ -748,20 +763,14 @@ function openModal(p){
 
   if(data.tcg_card_img && caught){
     selSec.style.display='block';
-    let priceHtml='';
-    if(data.tcg_price_market) priceHtml+=`<span class="price-chip price-market">💶 ${parseFloat(data.tcg_price_market).toFixed(2)}€</span>`;
-    if(data.tcg_price_low)    priceHtml+=`<span class="price-chip price-low">↓ ${parseFloat(data.tcg_price_low).toFixed(2)}€</span>`;
-    if(data.tcg_price_high)   priceHtml+=`<span class="price-chip price-high">↑ ${parseFloat(data.tcg_price_high).toFixed(2)}€</span>`;
-    if(!priceHtml) priceHtml='<span style="font-size:11px;color:var(--text-muted)">Sin precio</span>';
-    selDisp.innerHTML=`
-      <img class="selected-card-img" src="${data.tcg_card_img}" alt="${data.tcg_card_name||''}">
-      <div class="selected-card-info">
-        <div class="selected-card-name">${data.tcg_card_name||''}</div>
-        <div class="selected-card-set">${data.tcg_card_set||''}</div>
-        <div class="price-row">${priceHtml}</div>
-        <button class="change-card-btn" onclick="changeCard()">✎ Cambiar carta</button>
-      </div>
-    `;
+    selDisp.innerHTML = buildSelectedCardHTML(
+      data.tcg_card_img,
+      data.tcg_card_name || '',
+      data.tcg_card_set  || '',
+      '',
+      data.price_manual  || '',
+      data.language      || ''
+    );
   } else {
     selSec.style.display='none';
     // Auto-search the pokemon name to give results immediately
@@ -817,9 +826,13 @@ async function saveAndClose(){
     update.tcg_card_name = selectedCardData.name;
     update.tcg_card_img  = selectedCardData.images?.large||selectedCardData.images?.small||null;
     update.tcg_card_set  = selectedCardData.set?.name||null;
-    update.tcg_price_market = selectedCardData._priceMarket||null;
-    update.tcg_price_low    = selectedCardData._priceLow||null;
-    update.tcg_price_high   = selectedCardData._priceHigh||null;
+  }
+
+  // Save manual price from input (may exist even without new card selected)
+  const priceInput = document.getElementById('d-price');
+  if(priceInput) {
+    const val = parseFloat(priceInput.value);
+    update.price_manual = isNaN(val) ? null : val;
   }
 
   collection[selectedId]=update;
@@ -829,6 +842,14 @@ async function saveAndClose(){
   showToast('✓ Guardado','green',1600);
   btn.disabled=false; btn.textContent='Guardar';
   closeModal();
+}
+
+function updateCardmarketBtn() {
+  const btn = document.getElementById('cm-btn');
+  if(!btn) return;
+  const cardName = (selectedCardData?.name) || (collection[selectedId]?.tcg_card_name) || '';
+  const lang = document.getElementById('d-language')?.value || '';
+  if(cardName) btn.href = buildCardmarketUrl(cardName, lang);
 }
 
 function getRegionName(id){
