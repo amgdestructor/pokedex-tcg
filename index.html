@@ -72,17 +72,17 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .poke-slot:hover{transform:translateY(-3px);border-color:var(--red);box-shadow:0 6px 20px rgba(227,53,13,0.2);}
 .poke-slot.caught{background:var(--caught-bg);border-color:var(--caught-border);}
 .poke-slot.caught:hover{box-shadow:0 6px 20px rgba(46,204,113,0.2);}
-.poke-slot.has-detail{border-color:var(--yellow)!important;background:#1A1800!important;}
-.poke-slot.has-detail:hover{box-shadow:0 6px 20px rgba(255,210,63,0.25);}
+.poke-slot.has-detail{border-color:#7B68EE!important;background:#0D0D22!important;}
+.poke-slot.has-detail:hover{box-shadow:0 6px 20px rgba(123,104,238,0.3);}
 .poke-img{width:64px;height:64px;image-rendering:pixelated;transition:filter 0.2s;}
 .poke-slot.missing .poke-img{filter:brightness(0) opacity(0.15);}
-.poke-slot.has-detail .poke-img{filter:drop-shadow(0 0 8px rgba(255,210,63,0.5));}
+.poke-slot.has-detail .poke-img{filter:drop-shadow(0 0 6px rgba(123,104,238,0.55));}
 .poke-num{font-size:10px;font-weight:700;color:var(--text-muted);margin-top:5px;}
 .poke-slot.caught .poke-num{color:var(--caught-text);}
-.poke-slot.has-detail .poke-num{color:var(--yellow);}
+.poke-slot.has-detail .poke-num{color:#9B8EFF;}
 .poke-name{font-size:10px;font-weight:600;color:var(--text-muted);text-align:center;line-height:1.2;margin-top:2px;}
 .poke-slot.caught .poke-name{color:var(--text);}
-.detail-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:var(--yellow);border-radius:50%;}
+.detail-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:#7B68EE;border-radius:50%;}
 
 .empty-state{text-align:center;padding:80px 20px;color:var(--text-muted);grid-column:1/-1;}
 .empty-state .empty-icon{font-size:56px;margin-bottom:14px;}
@@ -640,15 +640,9 @@ function renderGrid(){
     slot.className='poke-slot '+(detail?'has-detail':caught?'caught':'missing');
     slot.title=`${esName} — 2 clics para detalle`;
 
-    // Si tiene imagen de carta guardada, mostrarla en vez del sprite
-    const cardImg = collection[p.id]?.tcg_card_img;
-    const imgHtml = cardImg
-      ? `<img class="poke-img" src="${cardImg}" alt="${esName}" loading="lazy" style="object-fit:contain;border-radius:4px;">`
-      : `<img class="poke-img" src="${p.sprite||''}" alt="${esName}" loading="lazy" onerror="this.style.visibility='hidden'">`;
-
     slot.innerHTML=`
       ${detail?'<div class="detail-dot"></div>':''}
-      ${imgHtml}
+      <img class="poke-img" src="${p.sprite||''}" alt="${esName}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="poke-num">#${numStr}</div>
       <div class="poke-name">${esName.length>10?esName.substring(0,10)+'…':esName}</div>
     `;
@@ -716,12 +710,11 @@ function quickToggle(id,slotEl){
   const p=allPokemon.find(x=>x.id===id);
   const esName=ES_NAMES[id]||capitalize(p?.name||'');
   const numStr=String(id).padStart(3,'0');
-  const cardImg=collection[id]?.tcg_card_img;
-  const imgHtml=cardImg
-    ?`<img class="poke-img" src="${cardImg}" alt="${esName}" loading="lazy" style="object-fit:contain;border-radius:4px;">`
-    :`<img class="poke-img" src="${p?.sprite||''}" alt="${esName}" loading="lazy" onerror="this.style.visibility='hidden'">`;
   slotEl.className='poke-slot '+(detail?'has-detail':nowCaught?'caught':'missing');
-  slotEl.innerHTML=`${detail?'<div class="detail-dot"></div>':''}${imgHtml}<div class="poke-num">#${numStr}</div><div class="poke-name">${esName.length>10?esName.substring(0,10)+'…':esName}</div>`;
+  slotEl.innerHTML=`${detail?'<div class="detail-dot"></div>':''}
+    <img class="poke-img" src="${p?.sprite||''}" alt="${esName}" loading="lazy" onerror="this.style.visibility='hidden'">
+    <div class="poke-num">#${numStr}</div>
+    <div class="poke-name">${esName.length>10?esName.substring(0,10)+'…':esName}</div>`;
   slotEl.style.transform='scale(1.18)';
   setTimeout(()=>{slotEl.style.transform='';},160);
   updateStats();
