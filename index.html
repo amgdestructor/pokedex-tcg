@@ -181,6 +181,21 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .toast.green{border-color:var(--caught-border);color:var(--caught-text);}
 .toast.red{border-color:var(--red);color:var(--red-light);}
 
+/* LOGIN SCREEN */
+.login-screen{position:fixed;inset:0;background:var(--darker);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;padding:24px;}
+.login-pokeball{width:80px;height:80px;background:linear-gradient(135deg,var(--red-dark),var(--red-light));border-radius:50%;margin-bottom:24px;position:relative;flex-shrink:0;}
+.login-pokeball::after{content:'';position:absolute;left:0;top:50%;right:0;height:5px;background:rgba(255,255,255,0.25);transform:translateY(-50%);}
+.login-title{font-family:'Unbounded',sans-serif;font-size:20px;color:var(--text);margin-bottom:8px;text-align:center;}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:32px;text-align:center;line-height:1.6;}
+.login-btn{display:flex;align-items:center;gap:12px;background:white;color:#1a1a1a;border:none;border-radius:12px;padding:14px 24px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:opacity 0.15s;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.login-btn:hover{opacity:0.92;}
+.login-note{font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center;opacity:0.6;}
+.user-badge{display:flex;align-items:center;gap:8px;}
+.user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);}
+.user-name{font-size:12px;color:rgba(255,255,255,0.85);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.logout-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:8px;color:white;font-size:11px;font-weight:700;padding:4px 8px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
+.logout-btn:hover{background:rgba(255,255,255,0.25);}
+
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:2px;}
@@ -202,6 +217,18 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen" style="display:none;">
+  <div class="login-pokeball"></div>
+  <div class="login-title">🔴 Mi Pokédex TCG</div>
+  <div class="login-sub">Tu álbum personal de cartas físicas.<br>Inicia sesión para acceder a tu colección.</div>
+  <button class="login-btn" onclick="loginWithGoogle()">
+    <img src="https://www.google.com/favicon.ico" alt="Google">
+    Entrar con Google
+  </button>
+  <div class="login-note">Tu colección queda guardada en la nube y<br>solo tú puedes verla.</div>
+</div>
+
 <div class="loading-overlay" id="loading-overlay">
   <div class="loading-ball"></div>
   <div class="loading-text">Cargando Pokédex...</div>
@@ -212,10 +239,15 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
   <div class="header-top">
     <div>
       <div class="header-title">🔴 MI POKÉDEX TCG</div>
-      <div class="header-sub">Álbum personal de cartas físicas</div>
+      <div class="header-sub" id="header-sub">Álbum personal de cartas físicas</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span class="sync-indicator sync-ok" id="sync-indicator">● Conectado</span>
+      <div id="user-area" class="user-badge" style="display:none;">
+        <img class="user-avatar" id="user-avatar" src="" alt="">
+        <span class="user-name" id="user-name"></span>
+        <button class="logout-btn" onclick="logout()">Salir</button>
+      </div>
       <div class="header-badge" id="total-badge">—</div>
     </div>
   </div>
@@ -381,11 +413,48 @@ let selectedId    = null;
 let selectedPokemon = null;
 let selectedCardData = null; // card from TCG API currently selected in modal
 
+// ── AUTH ──────────────────────────────────────────────────────────
+let currentUser = null;
+
+async function loginWithGoogle() {
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  collection = {};
+  showLoginScreen();
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('user-area').style.display = 'none';
+}
+
+function showApp(user) {
+  currentUser = user;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('user-area').style.display = 'flex';
+  const meta = user.user_metadata || {};
+  document.getElementById('user-name').textContent = meta.full_name || meta.name || user.email?.split('@')[0] || 'Usuario';
+  if(meta.avatar_url || meta.picture) {
+    document.getElementById('user-avatar').src = meta.avatar_url || meta.picture;
+    document.getElementById('user-avatar').style.display = 'block';
+  } else {
+    document.getElementById('user-avatar').style.display = 'none';
+  }
+}
+
 // ── SUPABASE ──────────────────────────────────────────────────────
 async function loadFromDB() {
+  if(!currentUser) return;
   setSyncStatus('busy','↻ Cargando...');
   try {
-    const {data,error} = await sb.from('collection').select('*');
+    const {data,error} = await sb.from('collection').select('*').eq('user_id', currentUser.id);
     if(error) throw error;
     collection = {};
     (data||[]).forEach(row => {
@@ -410,11 +479,13 @@ async function loadFromDB() {
 }
 
 async function saveToDB(id) {
+  if(!currentUser) return;
   const d = collection[id] || {};
   setSyncStatus('busy','↻ Guardando...');
   try {
     const {error} = await sb.from('collection').upsert({
       id,
+      user_id:          currentUser.id,
       caught:           !!d.caught,
       condition:        d.condition  || null,
       language:         d.language   || null,
@@ -425,7 +496,7 @@ async function saveToDB(id) {
       tcg_card_set:     d.tcg_card_set  || null,
       price_manual:     d.price_manual  || null,
       updated_at:       new Date().toISOString(),
-    },{onConflict:'id'});
+    },{onConflict:'id,user_id'});
     if(error) throw error;
     setSyncStatus('ok','● Guardado');
   } catch(e) {
@@ -566,9 +637,31 @@ function changeCard() {
 
 // ── INIT ──────────────────────────────────────────────────────────
 (async()=>{
-  await loadFromDB();
-  buildRegionTabs();
-  await loadRegion(0);
+  // Check existing session
+  const {data:{session}} = await sb.auth.getSession();
+  if(session?.user) {
+    showApp(session.user);
+    await loadFromDB();
+    buildRegionTabs();
+    await loadRegion(0);
+  } else {
+    document.getElementById('loading-overlay').style.display = 'none';
+    showLoginScreen();
+    buildRegionTabs();
+  }
+
+  // Listen for auth changes (e.g. after Google redirect)
+  sb.auth.onAuthStateChange(async(event, session) => {
+    if(event === 'SIGNED_IN' && session?.user) {
+      showApp(session.user);
+      document.getElementById('loading-overlay').style.display = 'flex';
+      await loadFromDB();
+      if(allPokemon.length === 0) await loadRegion(0);
+      else { renderGrid(); updateStats(); document.getElementById('loading-overlay').style.display = 'none'; }
+    } else if(event === 'SIGNED_OUT') {
+      showLoginScreen();
+    }
+  });
 })();
 
 function buildRegionTabs(){
