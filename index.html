@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Mi Pokédex TCG</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,13 +26,13 @@
 html,body{height:100%;}
 body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);min-height:100vh;}
 
-.header{background:linear-gradient(135deg,var(--red-dark) 0%,var(--red) 60%,var(--red-light) 100%);padding:20px 24px 16px;position:relative;overflow:hidden;}
-.header::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;border:24px solid rgba(255,255,255,0.1);border-radius:50%;}
-.header::after{content:'';position:absolute;right:40px;top:30px;width:70px;height:70px;border:12px solid rgba(255,255,255,0.07);border-radius:50%;}
-.header-top{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;}
-.header-title{font-family:'Unbounded',sans-serif;font-size:18px;color:white;letter-spacing:1px;}
-.header-sub{font-size:12px;color:rgba(255,255,255,0.75);margin-top:3px;}
-.header-badge{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;color:white;}
+.header{background:linear-gradient(135deg,var(--red-dark) 0%,var(--red) 60%,var(--red-light) 100%);padding:14px 18px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;right:-50px;top:-50px;width:140px;height:140px;border:20px solid rgba(255,255,255,0.08);border-radius:50%;pointer-events:none;}
+.header-top{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;gap:12px;position:relative;z-index:2;}
+.header-left{flex:1;min-width:0;}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.header-title{font-family:'Unbounded',sans-serif;font-size:16px;color:white;letter-spacing:0.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-badge{background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.4);border-radius:18px;padding:6px 14px;font-size:12px;font-weight:700;color:white;white-space:nowrap;}
 
 .stats-bar{background:var(--dark);padding:14px 24px;border-bottom:1px solid var(--card-border);}
 .stats-inner{display:flex;gap:28px;align-items:center;max-width:1200px;margin:0 auto;width:100%;}
@@ -45,10 +45,16 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .progress-track{height:8px;background:var(--card-border);border-radius:4px;overflow:hidden;}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--yellow));border-radius:4px;transition:width 0.6s ease;}
 
-.sync-indicator{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:700;}
-.sync-ok{background:rgba(46,204,113,0.15);color:var(--caught-border);border:1px solid rgba(46,204,113,0.3);}
-.sync-busy{background:rgba(255,210,63,0.15);color:var(--yellow);border:1px solid rgba(255,210,63,0.3);}
-.sync-err{background:rgba(227,53,13,0.15);color:var(--red-light);border:1px solid rgba(227,53,13,0.3);}
+.sync-indicator{font-size:10px;font-weight:700;}
+.sync-ok{color:var(--caught-border);}
+.sync-busy{color:var(--yellow);}
+.sync-err{color:var(--red-light);}
+
+.user-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:18px;padding:4px 6px 4px 4px;}
+.user-avatar{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);object-fit:cover;flex-shrink:0;}
+.user-name{font-size:11px;font-weight:700;color:white;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.logout-btn{background:rgba(255,255,255,0.15);border:none;border-radius:50%;color:white;font-size:13px;font-weight:700;width:22px;height:22px;cursor:pointer;font-family:'Nunito',sans-serif;transition:background 0.15s;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.logout-btn:hover{background:rgba(255,255,255,0.3);}
 
 .controls{background:var(--dark);border-bottom:1px solid var(--card-border);position:sticky;top:0;z-index:10;}
 .controls-inner{max-width:1200px;margin:0 auto;padding:0 24px;}
@@ -61,7 +67,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .filter-btn{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--card-border);background:transparent;color:var(--text-muted);transition:all 0.15s;font-family:'Nunito',sans-serif;}
 .filter-btn:hover{border-color:var(--text-muted);color:var(--text);}
 .filter-btn.active{border-color:var(--yellow);color:var(--yellow);}
-.search-box{margin-left:auto;background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;width:180px;transition:border-color 0.15s;}
+.search-box{margin-left:auto;background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:20px;padding:5px 14px;font-size:16px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;width:180px;transition:border-color 0.15s;}
 .search-box:focus{border-color:var(--yellow);}
 .search-box::placeholder{color:var(--text-muted);}
 .filter-hint{font-size:10px;color:var(--text-muted);white-space:nowrap;opacity:0.7;}
@@ -117,7 +123,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 
 /* CARD SEARCH */
 .card-search-wrap{position:relative;}
-.card-search-input{width:100%;background:var(--darker);border:1.5px solid var(--card-border);border-radius:var(--radius-sm);padding:10px 44px 10px 13px;font-size:13px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;transition:border-color 0.15s;}
+.card-search-input{width:100%;background:var(--darker);border:1.5px solid var(--card-border);border-radius:var(--radius-sm);padding:10px 44px 10px 13px;font-size:16px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;transition:border-color 0.15s;}
 .card-search-input:focus{border-color:var(--yellow);}
 .card-search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--red);border:none;border-radius:6px;color:white;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
 .card-search-btn:hover{background:var(--red-light);}
@@ -141,7 +147,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .selected-card-set{font-size:11px;color:var(--text-muted);margin-bottom:8px;}
 .price-manual-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .price-manual-label{font-size:11px;color:var(--text-muted);white-space:nowrap;}
-.price-manual-input{background:var(--darker);border:1.5px solid var(--card-border);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--yellow);font-family:'Nunito',sans-serif;outline:none;width:90px;transition:border-color 0.15s;}
+.price-manual-input{background:var(--darker);border:1.5px solid var(--card-border);border-radius:6px;padding:5px 8px;font-size:16px;font-weight:700;color:var(--yellow);font-family:'Nunito',sans-serif;outline:none;width:90px;transition:border-color 0.15s;}
 .price-manual-input:focus{border-color:var(--yellow);}
 .price-manual-input::placeholder{color:var(--text-muted);font-weight:400;}
 .cardmarket-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(0,115,61,0.2);border:1px solid rgba(0,180,80,0.4);border-radius:6px;color:#4cde8a;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;font-family:'Nunito',sans-serif;transition:all 0.15s;white-space:nowrap;}
@@ -155,7 +161,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 
 .detail-fields{display:flex;flex-direction:column;gap:10px;}
 .detail-field label{display:block;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
-.detail-field input,.detail-field textarea,.detail-field select{width:100%;background:var(--darker);border:1.5px solid var(--card-border);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;color:var(--text);font-family:'Nunito',sans-serif;transition:border-color 0.15s;outline:none;resize:none;}
+.detail-field input,.detail-field textarea,.detail-field select{width:100%;background:var(--darker);border:1.5px solid var(--card-border);border-radius:var(--radius-sm);padding:10px 13px;font-size:16px;color:var(--text);font-family:'Nunito',sans-serif;transition:border-color 0.15s;outline:none;resize:none;}
 .detail-field input:focus,.detail-field textarea:focus,.detail-field select:focus{border-color:var(--yellow);}
 .detail-field textarea{height:60px;}
 .detail-field select option{background:var(--darker);}
@@ -188,7 +194,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .login-title{font-family:'Unbounded',sans-serif;font-size:20px;color:var(--text);margin-bottom:8px;text-align:center;}
 .login-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px;text-align:center;line-height:1.6;}
 .login-form{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;}
-.login-input{background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;transition:border-color 0.15s;width:100%;}
+.login-input{background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:10px;padding:14px 16px;font-size:16px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;transition:border-color 0.15s;width:100%;}
 .login-input:focus{border-color:var(--red);}
 .login-input::placeholder{color:var(--text-muted);}
 .login-error{font-size:12px;color:var(--red-light);min-height:16px;text-align:center;margin-top:-4px;}
@@ -199,20 +205,18 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .login-btn-secondary:hover{border-color:var(--text-muted);color:var(--text);}
 .login-divider{text-align:center;font-size:11px;color:var(--text-muted);margin:8px 0 -2px;letter-spacing:0.5px;}
 .login-note{font-size:11px;color:var(--text-muted);margin-top:24px;text-align:center;opacity:0.6;}
-.user-badge{display:flex;align-items:center;gap:8px;}
-.user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);}
-.user-name{font-size:12px;color:rgba(255,255,255,0.85);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.logout-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:8px;color:white;font-size:11px;font-weight:700;padding:4px 8px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
-.logout-btn:hover{background:rgba(255,255,255,0.25);}
 
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:2px;}
 
 @media(max-width:600px){
-  .header{padding:14px 16px 12px;}
-  .header-title{font-size:14px;}
-  .stats-inner{gap:12px;}
+  .header{padding:12px 14px;}
+  .header-title{font-size:13px;letter-spacing:0.5px;}
+  .header-badge{padding:5px 10px;font-size:11px;}
+  .user-name{max-width:70px;font-size:10px;}
+  .user-avatar{width:22px;height:22px;}
+  .stats-inner{gap:14px;}
   .stat-val{font-size:14px;}
   .controls-inner{padding:0 12px;}
   .grid-wrap{padding:12px 10px 80px;}
@@ -235,10 +239,11 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
   <div class="login-form">
     <input type="email" id="login-email" class="login-input" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter') doLogin()">
     <input type="password" id="login-password" class="login-input" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+    <input type="text" id="login-name" class="login-input" placeholder="Nombre de usuario (solo al registrar)" autocomplete="username" style="display:none;">
     <div class="login-error" id="login-error"></div>
     <button class="login-btn-main" id="login-submit" onclick="doLogin()">Iniciar sesión</button>
     <div class="login-divider">¿Primera vez aquí?</div>
-    <button class="login-btn-secondary" onclick="doSignup()">Crear cuenta nueva</button>
+    <button class="login-btn-secondary" id="signup-toggle" onclick="toggleSignup()">Crear cuenta nueva</button>
   </div>
 
   <div class="login-note">Tu colección queda guardada en la nube y<br>solo tú puedes verla.</div>
@@ -252,16 +257,14 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 
 <div class="header">
   <div class="header-top">
-    <div>
+    <div class="header-left">
       <div class="header-title">🔴 MI POKÉDEX TCG</div>
-      <div class="header-sub" id="header-sub">Álbum personal de cartas físicas</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span class="sync-indicator sync-ok" id="sync-indicator">● Conectado</span>
+    <div class="header-right">
       <div id="user-area" class="user-badge" style="display:none;">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
-        <button class="logout-btn" onclick="logout()">Salir</button>
+        <button class="logout-btn" onclick="logout()" title="Salir">↪</button>
       </div>
       <div class="header-badge" id="total-badge">—</div>
     </div>
@@ -275,7 +278,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
     <div class="stat"><div class="stat-val" id="stat-detail">0</div><div class="stat-label">⭐ Con detalle</div></div>
     <div class="stat"><div class="stat-val green" id="stat-value">€0</div><div class="stat-label">Valor estimado</div></div>
     <div class="progress-wrap">
-      <div class="progress-label"><span>Progreso</span><span id="progress-pct">0%</span></div>
+      <div class="progress-label"><span>Progreso</span><span><span id="sync-indicator" class="sync-indicator sync-ok">●</span> <span id="progress-pct">0%</span></span></div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
   </div>
@@ -439,6 +442,31 @@ function showLoginError(msg) {
   }, 5000);
 }
 
+let signupMode = false;
+
+function toggleSignup() {
+  signupMode = !signupMode;
+  const nameInput = document.getElementById('login-name');
+  const submitBtn = document.getElementById('login-submit');
+  const toggleBtn = document.getElementById('signup-toggle');
+  const divider   = document.querySelector('.login-divider');
+
+  if(signupMode) {
+    nameInput.style.display = 'block';
+    submitBtn.textContent = 'Crear cuenta';
+    submitBtn.setAttribute('onclick', 'doSignup()');
+    toggleBtn.textContent = '← Volver a iniciar sesión';
+    divider.textContent = '¿Ya tienes cuenta?';
+  } else {
+    nameInput.style.display = 'none';
+    submitBtn.textContent = 'Iniciar sesión';
+    submitBtn.setAttribute('onclick', 'doLogin()');
+    toggleBtn.textContent = 'Crear cuenta nueva';
+    divider.textContent = '¿Primera vez aquí?';
+  }
+  document.getElementById('login-error').textContent = '';
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
@@ -455,20 +483,25 @@ async function doLogin() {
     else if(error.message.includes('Email not confirmed')) showLoginError('Confirma tu email primero (revisa tu bandeja)');
     else showLoginError(error.message);
   }
-  // si va bien, onAuthStateChange se encarga del resto
 }
 
 async function doSignup() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
+  const name = document.getElementById('login-name').value.trim();
   if(!email || !password) { showLoginError('Rellena email y contraseña'); return; }
+  if(!name) { showLoginError('Pon un nombre de usuario'); return; }
   if(password.length < 6) { showLoginError('La contraseña debe tener al menos 6 caracteres'); return; }
 
   const btn = document.getElementById('login-submit');
-  btn.disabled = true;
+  btn.disabled = true; btn.textContent = 'Creando...';
 
-  const {data, error} = await sb.auth.signUp({ email, password });
-  btn.disabled = false;
+  const {data, error} = await sb.auth.signUp({
+    email,
+    password,
+    options: { data: { display_name: name } }
+  });
+  btn.disabled = false; btn.textContent = 'Crear cuenta';
 
   if(error) {
     if(error.message.includes('already')) showLoginError('Ese email ya está registrado, prueba a iniciar sesión');
@@ -477,12 +510,10 @@ async function doSignup() {
   }
 
   if(data?.user && !data.session) {
-    // Email confirmation enabled
     showLoginError('✓ Cuenta creada. Revisa tu email para confirmarla.');
     document.getElementById('login-error').style.color = 'var(--caught-border)';
     setTimeout(() => { document.getElementById('login-error').style.color = ''; }, 6000);
   }
-  // si data.session existe, onAuthStateChange entra solo
 }
 
 async function logout() {
@@ -502,7 +533,8 @@ function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('user-area').style.display = 'flex';
   const meta = user.user_metadata || {};
-  document.getElementById('user-name').textContent = meta.full_name || meta.name || user.email?.split('@')[0] || 'Usuario';
+  const displayName = meta.display_name || meta.full_name || meta.name || user.email?.split('@')[0] || 'Usuario';
+  document.getElementById('user-name').textContent = displayName;
   if(meta.avatar_url || meta.picture) {
     document.getElementById('user-avatar').src = meta.avatar_url || meta.picture;
     document.getElementById('user-avatar').style.display = 'block';
@@ -571,8 +603,10 @@ async function saveToDB(id) {
 
 function setSyncStatus(type,text){
   const el=document.getElementById('sync-indicator');
+  if(!el) return;
   el.className='sync-indicator sync-'+type;
-  el.textContent=text;
+  el.textContent='●';
+  el.title = text || '';
 }
 
 function showToast(msg,type='',duration=2000){
