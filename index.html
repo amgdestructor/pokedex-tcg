@@ -214,7 +214,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
   .header{padding:12px 14px;}
   .header-title{font-size:13px;letter-spacing:0.5px;}
   .header-badge{padding:5px 10px;font-size:11px;}
-  .user-name{max-width:70px;font-size:10px;}
+  .user-name{max-width:110px;font-size:10px;}
   .user-avatar{width:22px;height:22px;}
   .stats-inner{gap:14px;}
   .stat-val{font-size:14px;}
@@ -258,7 +258,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 <div class="header">
   <div class="header-top">
     <div class="header-left">
-      <div class="header-title">🔴 MI POKÉDEX TCG</div>
+      <div class="header-title">🔴 MI POKÉDEX</div>
     </div>
     <div class="header-right">
       <div id="user-area" class="user-badge" style="display:none;">
@@ -707,6 +707,7 @@ function buildSelectedCardHTML(imgUrl, cardName, setName, cardNum, priceVal, lan
           🛒 Ver en Cardmarket
         </a>
         <button class="change-card-btn" onclick="changeCard()">✎ Cambiar carta</button>
+        <button class="change-card-btn" onclick="removeCard()" style="border-color:rgba(227,53,13,0.4);color:#FF8870;">✕ Quitar carta</button>
       </div>
     </div>
   `;
@@ -729,6 +730,30 @@ function changeCard() {
   document.getElementById('selected-card-section').style.display = 'none';
   document.getElementById('card-search-input').value = '';
   document.getElementById('card-results-wrap').innerHTML = '';
+}
+
+async function removeCard() {
+  if(selectedId === null) return;
+  if(!confirm('¿Seguro que quieres quitar la carta guardada de este Pokémon?')) return;
+
+  const data = collection[selectedId] || {};
+  collection[selectedId] = {
+    ...data,
+    tcg_card_id: null,
+    tcg_card_name: null,
+    tcg_card_img: null,
+    tcg_card_set: null,
+    price_manual: null,
+  };
+  selectedCardData = null;
+
+  await saveToDB(selectedId);
+  document.getElementById('selected-card-section').style.display = 'none';
+  document.getElementById('card-search-input').value = '';
+  document.getElementById('card-results-wrap').innerHTML = '';
+  renderGrid();
+  updateStats();
+  showToast('Carta quitada', '', 1500);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
