@@ -186,10 +186,19 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .login-pokeball{width:80px;height:80px;background:linear-gradient(135deg,var(--red-dark),var(--red-light));border-radius:50%;margin-bottom:24px;position:relative;flex-shrink:0;}
 .login-pokeball::after{content:'';position:absolute;left:0;top:50%;right:0;height:5px;background:rgba(255,255,255,0.25);transform:translateY(-50%);}
 .login-title{font-family:'Unbounded',sans-serif;font-size:20px;color:var(--text);margin-bottom:8px;text-align:center;}
-.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:32px;text-align:center;line-height:1.6;}
-.login-btn{display:flex;align-items:center;gap:12px;background:white;color:#1a1a1a;border:none;border-radius:12px;padding:14px 24px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:opacity 0.15s;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
-.login-btn:hover{opacity:0.92;}
-.login-note{font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center;opacity:0.6;}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px;text-align:center;line-height:1.6;}
+.login-form{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;}
+.login-input{background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;transition:border-color 0.15s;width:100%;}
+.login-input:focus{border-color:var(--red);}
+.login-input::placeholder{color:var(--text-muted);}
+.login-error{font-size:12px;color:var(--red-light);min-height:16px;text-align:center;margin-top:-4px;}
+.login-btn-main{background:linear-gradient(135deg,var(--red),var(--red-light));color:white;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Unbounded',sans-serif;letter-spacing:0.5px;transition:opacity 0.15s;margin-top:4px;}
+.login-btn-main:hover{opacity:0.92;}
+.login-btn-main:disabled{opacity:0.5;cursor:not-allowed;}
+.login-btn-secondary{background:transparent;color:var(--text-muted);border:1.5px solid var(--card-border);border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
+.login-btn-secondary:hover{border-color:var(--text-muted);color:var(--text);}
+.login-divider{text-align:center;font-size:11px;color:var(--text-muted);margin:8px 0 -2px;letter-spacing:0.5px;}
+.login-note{font-size:11px;color:var(--text-muted);margin-top:24px;text-align:center;opacity:0.6;}
 .user-badge{display:flex;align-items:center;gap:8px;}
 .user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);}
 .user-name{font-size:12px;color:rgba(255,255,255,0.85);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -222,10 +231,16 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
   <div class="login-pokeball"></div>
   <div class="login-title">🔴 Mi Pokédex TCG</div>
   <div class="login-sub">Tu álbum personal de cartas físicas.<br>Inicia sesión para acceder a tu colección.</div>
-  <button class="login-btn" onclick="loginWithGoogle()">
-    <img src="https://www.google.com/favicon.ico" alt="Google">
-    Entrar con Google
-  </button>
+
+  <div class="login-form">
+    <input type="email" id="login-email" class="login-input" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter') doLogin()">
+    <input type="password" id="login-password" class="login-input" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn-main" id="login-submit" onclick="doLogin()">Iniciar sesión</button>
+    <div class="login-divider">¿Primera vez aquí?</div>
+    <button class="login-btn-secondary" onclick="doSignup()">Crear cuenta nueva</button>
+  </div>
+
   <div class="login-note">Tu colección queda guardada en la nube y<br>solo tú puedes verla.</div>
 </div>
 
@@ -416,11 +431,58 @@ let selectedCardData = null; // card from TCG API currently selected in modal
 // ── AUTH ──────────────────────────────────────────────────────────
 let currentUser = null;
 
-async function loginWithGoogle() {
-  await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.href }
-  });
+function showLoginError(msg) {
+  document.getElementById('login-error').textContent = msg;
+  setTimeout(() => {
+    const el = document.getElementById('login-error');
+    if(el.textContent === msg) el.textContent = '';
+  }, 5000);
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if(!email || !password) { showLoginError('Email y contraseña obligatorios'); return; }
+
+  const btn = document.getElementById('login-submit');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+
+  const {data, error} = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Iniciar sesión';
+
+  if(error) {
+    if(error.message.includes('Invalid login')) showLoginError('Email o contraseña incorrectos');
+    else if(error.message.includes('Email not confirmed')) showLoginError('Confirma tu email primero (revisa tu bandeja)');
+    else showLoginError(error.message);
+  }
+  // si va bien, onAuthStateChange se encarga del resto
+}
+
+async function doSignup() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if(!email || !password) { showLoginError('Rellena email y contraseña'); return; }
+  if(password.length < 6) { showLoginError('La contraseña debe tener al menos 6 caracteres'); return; }
+
+  const btn = document.getElementById('login-submit');
+  btn.disabled = true;
+
+  const {data, error} = await sb.auth.signUp({ email, password });
+  btn.disabled = false;
+
+  if(error) {
+    if(error.message.includes('already')) showLoginError('Ese email ya está registrado, prueba a iniciar sesión');
+    else showLoginError(error.message);
+    return;
+  }
+
+  if(data?.user && !data.session) {
+    // Email confirmation enabled
+    showLoginError('✓ Cuenta creada. Revisa tu email para confirmarla.');
+    document.getElementById('login-error').style.color = 'var(--caught-border)';
+    setTimeout(() => { document.getElementById('login-error').style.color = ''; }, 6000);
+  }
+  // si data.session existe, onAuthStateChange entra solo
 }
 
 async function logout() {
