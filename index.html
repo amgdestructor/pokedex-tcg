@@ -747,10 +747,15 @@ async function removeCard() {
   };
   selectedCardData = null;
 
-  await saveToDB(selectedId);
+  // Clear UI
   document.getElementById('selected-card-section').style.display = 'none';
   document.getElementById('card-search-input').value = '';
   document.getElementById('card-results-wrap').innerHTML = '';
+  // Clear price input if visible
+  const priceInput = document.getElementById('d-price');
+  if(priceInput) priceInput.value = '';
+
+  await saveToDB(selectedId);
   renderGrid();
   updateStats();
   showToast('Carta quitada', '', 1500);
@@ -1035,11 +1040,14 @@ async function saveAndClose(){
     update.tcg_card_set  = selectedCardData.set?.name||null;
   }
 
-  // Save manual price from input (may exist even without new card selected)
+  // Save manual price only if there's an actual card linked (current or new)
+  const hasCard = !!(update.tcg_card_img || update.tcg_card_id);
   const priceInput = document.getElementById('d-price');
-  if(priceInput) {
+  if(priceInput && hasCard) {
     const val = parseFloat(priceInput.value);
     update.price_manual = isNaN(val) ? null : val;
+  } else {
+    update.price_manual = null;
   }
 
   collection[selectedId]=update;
