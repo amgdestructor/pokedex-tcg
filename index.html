@@ -623,20 +623,49 @@ async function searchCards() {
   wrap.innerHTML = '<div class="searching-indicator">🔍 Buscando...</div>';
 
   try {
-    const esName = ES_NAMES[selectedId] || '';
-    // Search by query + pokemon name to narrow results
-    const pokeName = selectedPokemon?.name || '';
-    const url = `https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(q)}"&pageSize=20`;
+    // Build flexible query: try matching name with wildcards OR number OR set name
+    // Split user input into words to find any that match
+    const words = q.split(/\s+/).filter(w => w.length > 0);
+
+    // Build OR query for each word against name, number, and set.name
+    const orParts = [];
+    words.forEach(w => {
+      const safe = w.replace(/"/g, '\\"');
+      // wildcards: matches partial words
+      orParts.push(`name:*${safe}*`);
+      orParts.push(`number:${safe}`);
+      orParts.push(`set.name:*${safe}*`);
+      orParts.push(`set.id:${safe.toLowerCase()}`);
+    });
+
+    // Build AND query: every word must match somewhere
+    // For each word, at least one of (name, number, set.name, set.id) matches
+    const andClauses = words.map(w => {
+      const safe = w.replace(/"/g, '\\"');
+      return `(name:*${safe}* OR number:${safe} OR set.name:*${safe}* OR set.id:${safe.toLowerCase()})`;
+    }).join(' ');
+
+    const finalQuery = andClauses || `name:"${q}"`;
+    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(finalQuery)}&pageSize=30`;
     const res = await fetch(url, {headers:{'X-Api-Key': TCG_API_KEY}});
     const data = await res.json();
 
     if(!data.data || data.data.length === 0) {
-      wrap.innerHTML = '<div class="no-results">Sin resultados — prueba con otro nombre o código de set</div>';
+      // Fallback: try simpler name-only search
+      const fallbackUrl = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent('name:*'+q+'*')}&pageSize=30`;
+      const res2 = await fetch(fallbackUrl, {headers:{'X-Api-Key': TCG_API_KEY}});
+      const data2 = await res2.json();
+      if(!data2.data || data2.data.length === 0) {
+        wrap.innerHTML = '<div class="no-results">Sin resultados — prueba con el nombre del Pokémon en inglés, o con el código del set (ej: "swsh11", "sv4")</div>';
+        return;
+      }
+      renderCardResults(data2.data, wrap);
       return;
     }
 
     renderCardResults(data.data, wrap);
   } catch(e) {
+    console.error(e);
     wrap.innerHTML = '<div class="no-results">Error al buscar — comprueba tu conexión</div>';
   }
 }
