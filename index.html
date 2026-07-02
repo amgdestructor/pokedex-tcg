@@ -79,15 +79,18 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .mini-stat-val{font-size:15px;font-weight:700;color:var(--text);}
 .mini-stat-label{font-size:10px;color:var(--text-muted);margin-top:1px;}
 
-/* TOP CARDS */
-.top-card{background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:var(--radius-sm);padding:10px;display:flex;gap:12px;align-items:center;margin-bottom:8px;cursor:pointer;transition:all 0.15s;}
-.top-card:hover{border-color:var(--purple);transform:translateY(-1px);}
-.top-card-img{width:46px;height:62px;border-radius:5px;flex-shrink:0;object-fit:contain;background:var(--darker);}
-.top-card-info{flex:1;min-width:0;}
-.top-card-rank{font-size:10px;font-weight:700;color:var(--text-muted);}
-.top-card-name{font-size:13px;font-weight:700;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.top-card-set{font-size:10px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.top-card-price{font-size:14px;font-weight:700;color:var(--yellow);flex-shrink:0;}
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.card-tile{background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:var(--radius-sm);padding:8px 6px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all 0.15s;position:relative;}
+.card-tile:hover{border-color:var(--yellow);transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,210,63,0.15);}
+.card-tile-rank{position:absolute;top:4px;left:4px;background:var(--darker);border:1px solid var(--card-border);border-radius:8px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--text-muted);z-index:2;}
+.card-tile-img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:5px;background:var(--darker);}
+.card-tile-name{font-size:10px;font-weight:700;color:var(--text);margin-top:6px;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
+.card-tile-price{font-size:13px;font-weight:700;color:var(--yellow);margin-top:3px;}
+.card-tile-set{font-size:9px;color:var(--text-muted);margin-top:1px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
+
+.show-more-btn{display:block;width:100%;background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:var(--radius-sm);padding:12px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:6px;transition:all 0.15s;}
+.show-more-btn:hover{border-color:var(--yellow);color:var(--yellow);}
 
 .empty-state{text-align:center;padding:40px 20px;color:var(--text-muted);}
 .empty-state .empty-icon{font-size:42px;margin-bottom:10px;}
@@ -140,6 +143,15 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .friend-stats{font-size:10px;color:var(--text-muted);margin-top:3px;}
 .friend-pct{font-size:14px;font-weight:700;color:var(--yellow);flex-shrink:0;}
 .friend-chevron{color:var(--text-muted);font-size:18px;margin-left:6px;}
+
+/* FRIEND VIEW INSIDE FRIENDS TAB */
+.friend-view-header{display:flex;align-items:center;gap:10px;padding:12px 16px 4px;}
+.back-btn{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;flex-shrink:0;}
+.back-btn:hover{border-color:var(--purple);color:var(--purple-light);}
+.friend-view-title{font-family:'Unbounded',sans-serif;font-size:16px;color:var(--text);flex:1;}
+.view-toggle-row{display:flex;gap:6px;padding:8px 16px 14px;}
+.view-toggle-btn{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--card-border);background:var(--card-bg);color:var(--text-muted);font-family:'Nunito',sans-serif;transition:all 0.15s;}
+.view-toggle-btn.active{border-color:var(--purple);color:var(--purple-light);background:#0D0D22;}
 
 .add-btn-row{display:flex;gap:8px;margin-bottom:12px;padding:0 4px;}
 .add-action-btn{flex:1;background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:var(--radius-sm);padding:10px;font-size:12px;color:var(--text);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Nunito',sans-serif;transition:all 0.15s;position:relative;}
@@ -347,13 +359,6 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 
 <!-- VIEW: POKEDEX -->
 <div class="view" id="view-pokedex">
-  <div id="friend-banner-wrap" style="display:none;">
-    <div class="friend-banner">
-      <span>Viendo Pokédex de <strong id="friend-banner-name">—</strong></span>
-      <button class="friend-banner-back" onclick="exitFriendView()">← Volver a mi Pokédex</button>
-    </div>
-  </div>
-
   <div class="stats-bar">
     <div class="stats-inner">
       <div class="stat"><div class="stat-val" id="stat-caught">0</div><div class="stat-label">Tengo</div></div>
@@ -375,7 +380,6 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
         <button class="filter-btn" onclick="setFilter('caught',this)">✓ Tengo</button>
         <button class="filter-btn" onclick="setFilter('missing',this)">✗ Me faltan</button>
         <button class="filter-btn" onclick="setFilter('detail',this)">⭐ Con carta</button>
-        <button class="filter-btn" id="diff-filter-btn" onclick="setFilter('diff',this)" style="display:none;border-color:var(--purple);color:var(--purple-light);">🆚 Le falta a quien?</button>
         <input type="text" class="search-box" id="search-box" placeholder="🔍 Buscar..." oninput="renderGrid()">
         <span class="filter-count" id="filter-count"></span>
       </div>
@@ -389,15 +393,77 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 
 <!-- VIEW: FRIENDS -->
 <div class="view" id="view-friends">
-  <div class="page-title">Amigos</div>
-  <div class="section">
-    <div class="add-btn-row">
-      <button class="add-action-btn primary" onclick="openAddFriendModal()">➕ Añadir amigo</button>
-      <button class="add-action-btn" onclick="openRequestsModal()">🔔 Solicitudes <span class="badge" id="requests-badge" style="display:none;">0</span></button>
+  <!-- Estado 1: lista de amigos -->
+  <div id="friends-list-state">
+    <div class="page-title">Amigos</div>
+    <div class="section">
+      <div class="add-btn-row">
+        <button class="add-action-btn primary" onclick="openAddFriendModal()">➕ Añadir amigo</button>
+        <button class="add-action-btn" onclick="openRequestsModal()">🔔 Solicitudes <span class="badge" id="requests-badge" style="display:none;">0</span></button>
+      </div>
+      <div class="section-title" id="friends-section-title">Mis amigos · 0</div>
+      <div id="friends-list">
+        <div class="empty-state"><div class="empty-icon">👥</div><p>Aún no tienes amigos.<br>Añade alguno para ver su colección.</p></div>
+      </div>
     </div>
-    <div class="section-title" id="friends-section-title">Mis amigos · 0</div>
-    <div id="friends-list">
-      <div class="empty-state"><div class="empty-icon">👥</div><p>Aún no tienes amigos.<br>Añade alguno para ver su colección.</p></div>
+  </div>
+
+  <!-- Estado 2: home de un amigo (resumen y cartas) -->
+  <div id="friend-home-state" style="display:none;">
+    <div class="friend-view-header">
+      <button class="back-btn" onclick="backToFriendsList()">← Volver</button>
+      <span class="friend-view-title" id="friend-home-title">—</span>
+    </div>
+    <div class="view-toggle-row">
+      <button class="view-toggle-btn active" id="tgl-home" onclick="switchFriendSubView('home')">📊 Resumen</button>
+      <button class="view-toggle-btn" id="tgl-pokedex" onclick="switchFriendSubView('pokedex')">🔴 Ver Pokédex</button>
+    </div>
+    <div class="section" id="friend-home-content">
+      <!-- Se rellena dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Estado 3: pokedex de un amigo (dentro de la pestaña Amigos) -->
+  <div id="friend-pokedex-state" style="display:none;">
+    <div class="friend-view-header">
+      <button class="back-btn" onclick="backToFriendsList()">← Volver</button>
+      <span class="friend-view-title" id="friend-pokedex-title">—</span>
+    </div>
+    <div class="view-toggle-row">
+      <button class="view-toggle-btn" onclick="switchFriendSubView('home')">📊 Resumen</button>
+      <button class="view-toggle-btn active" onclick="switchFriendSubView('pokedex')">🔴 Ver Pokédex</button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stats-inner">
+        <div class="stat"><div class="stat-val" id="fp-caught">0</div><div class="stat-label">Tiene</div></div>
+        <div class="stat"><div class="stat-val" id="fp-missing">0</div><div class="stat-label">Le faltan</div></div>
+        <div class="stat"><div class="stat-val" id="fp-detail">0</div><div class="stat-label">⭐</div></div>
+        <div class="stat"><div class="stat-val green" id="fp-value">€0</div><div class="stat-label">Valor</div></div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Progreso</span><span id="fp-pct">0%</span></div>
+          <div class="progress-track"><div class="progress-fill" id="fp-progress-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="controls-inner">
+        <div class="region-tabs" id="fp-region-tabs"></div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="setFPFilter('all',this)">Todos</button>
+          <button class="filter-btn" onclick="setFPFilter('caught',this)">✓ Tiene</button>
+          <button class="filter-btn" onclick="setFPFilter('missing',this)">✗ Le falta</button>
+          <button class="filter-btn" onclick="setFPFilter('detail',this)">⭐ Con carta</button>
+          <button class="filter-btn" style="border-color:var(--purple);color:var(--purple-light);" onclick="setFPFilter('diff',this)">🆚 Tiene él, yo no</button>
+          <input type="text" class="search-box" id="fp-search-box" placeholder="🔍 Buscar..." oninput="renderFPGrid()">
+          <span class="filter-count" id="fp-filter-count"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="dex-grid" id="fp-dex-grid"></div>
     </div>
   </div>
 </div>
@@ -750,10 +816,9 @@ async function saveUsername() {
 // ── DATABASE ──────────────────────────────────────────────────────
 async function loadFromDB() {
   if(!currentUser) return;
-  const targetUserId = viewingFriend ? viewingFriend.id : currentUser.id;
   setSyncStatus('busy','↻');
   try {
-    const {data,error} = await sb.from('collection').select('*').eq('user_id', targetUserId);
+    const {data,error} = await sb.from('collection').select('*').eq('user_id', currentUser.id);
     if(error) throw error;
     collection = {};
     (data||[]).forEach(row => {
@@ -827,10 +892,26 @@ function switchView(viewName) {
 }
 
 // ── HOME VIEW ─────────────────────────────────────────────────────
+let homeShowAll = false;
+
 function renderHome() {
+  renderHomeFor(collection, {
+    valueEl:'home-value', caughtEl:'home-caught', missingEl:'home-missing',
+    detailEl:'home-detail', pctEl:'home-pct', fillEl:'home-progress-fill',
+    listEl:'top-cards-list', showAllFlag:'homeShowAll',
+    toggleFn:'toggleHomeShowAll', openFn:'openPokemonById'
+  });
+}
+
+function toggleHomeShowAll() {
+  homeShowAll = !homeShowAll;
+  renderHome();
+}
+
+function renderHomeFor(coll, ids) {
   let caught = 0, detail = 0, totalValue = 0;
   const allCards = [];
-  Object.entries(collection).forEach(([id, d]) => {
+  Object.entries(coll).forEach(([id, d]) => {
     if(d.caught) caught++;
     if(d.tcg_card_img || d.tcg_card_id) detail++;
     if(d.price_manual) {
@@ -842,32 +923,48 @@ function renderHome() {
   const missing = total - caught;
   const pct = Math.round((caught / total) * 100);
 
-  document.getElementById('home-value').textContent = totalValue > 0 ? `€${totalValue.toFixed(2)}` : '€0';
-  document.getElementById('home-caught').textContent = caught;
-  document.getElementById('home-missing').textContent = missing;
-  document.getElementById('home-detail').textContent = detail + ' ⭐';
-  document.getElementById('home-pct').textContent = pct + '%';
-  document.getElementById('home-progress-fill').style.width = pct + '%';
+  document.getElementById(ids.valueEl).textContent = totalValue > 0 ? `€${totalValue.toFixed(2)}` : '€0';
+  document.getElementById(ids.caughtEl).textContent = caught;
+  if(document.getElementById(ids.missingEl)) document.getElementById(ids.missingEl).textContent = missing;
+  if(document.getElementById(ids.detailEl)) document.getElementById(ids.detailEl).textContent = detail + ' ⭐';
+  document.getElementById(ids.pctEl).textContent = pct + '%';
+  document.getElementById(ids.fillEl).style.width = pct + '%';
 
-  // Top 10 by price
   allCards.sort((a,b) => parseFloat(b.price_manual) - parseFloat(a.price_manual));
-  const top = allCards.slice(0, 10);
-  const wrap = document.getElementById('top-cards-list');
-  if(top.length === 0) {
-    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><p>Aún no has guardado cartas con precio.<br>Añade el precio en tus cartas chulas y aparecerán aquí.</p></div>`;
+
+  const wrap = document.getElementById(ids.listEl);
+  if(allCards.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><p>No hay cartas con precio guardado aún.</p></div>`;
     return;
   }
-  wrap.innerHTML = top.map((c, i) => `
-    <div class="top-card" onclick="openPokemonById(${c.pokemonId})">
-      <img class="top-card-img" src="${c.tcg_card_img || ''}" alt="" onerror="this.style.opacity='0.3'">
-      <div class="top-card-info">
-        <div class="top-card-rank">#${i+1}</div>
-        <div class="top-card-name">${c.tcg_card_name || ES_NAMES[c.pokemonId] || 'Pokémon'}</div>
-        <div class="top-card-set">${c.tcg_card_set || ''}${c.language ? ' · '+c.language : ''}</div>
+
+  const showAllFlag = window[ids.showAllFlag];
+  const showCount = showAllFlag ? allCards.length : Math.min(10, allCards.length);
+  const cardsToShow = allCards.slice(0, showCount);
+  const hasMore = allCards.length > 10;
+
+  const openFn = ids.openFn;
+  let html = '<div class="cards-grid">';
+  cardsToShow.forEach((c, i) => {
+    const name = c.tcg_card_name || ES_NAMES[c.pokemonId] || 'Pokémon';
+    html += `
+      <div class="card-tile" ${openFn ? `onclick="${openFn}(${c.pokemonId})"` : ''}>
+        <div class="card-tile-rank">#${i+1}</div>
+        <img class="card-tile-img" src="${c.tcg_card_img || ''}" alt="${name}" loading="lazy" onerror="this.style.opacity='0.3'">
+        <div class="card-tile-name">${name}</div>
+        <div class="card-tile-price">€${parseFloat(c.price_manual).toFixed(2)}</div>
+        <div class="card-tile-set">${c.tcg_card_set || ''}</div>
       </div>
-      <div class="top-card-price">€${parseFloat(c.price_manual).toFixed(2)}</div>
-    </div>
-  `).join('');
+    `;
+  });
+  html += '</div>';
+
+  if(hasMore) {
+    const label = showAllFlag ? `▲ Mostrar menos` : `▼ Ver todas (${allCards.length})`;
+    html += `<button class="show-more-btn" onclick="${ids.toggleFn}()">${label}</button>`;
+  }
+
+  wrap.innerHTML = html;
 }
 
 async function openPokemonById(id) {
@@ -1057,38 +1154,230 @@ async function respondRequest(reqId, status) {
   loadFriends();
 }
 
-// ── VIEW FRIEND POKEDEX ───────────────────────────────────────────
+// ── VIEW FRIEND (inside Friends tab) ──────────────────────────────
+let currentFriendCollection = {};
+let friendShowAll = false;
+let friendPokemonList = [];
+let fpCurrentRegion = 0;
+let fpCurrentFilter = 'all';
+
 async function viewFriendPokedex(friendId, friendName) {
-  // Save my collection
-  myCollectionCache = {...collection};
   viewingFriend = { id: friendId, username: friendName };
+  currentFriendCollection = {};
 
-  document.getElementById('friend-banner-wrap').style.display = 'block';
-  document.getElementById('friend-banner-name').textContent = friendName;
-  document.getElementById('diff-filter-btn').style.display = 'inline-block';
-  document.getElementById('diff-filter-btn').textContent = `🆚 Tiene ${friendName}, yo no`;
+  // Load friend's collection
+  try {
+    const {data} = await sb.from('collection').select('*').eq('user_id', friendId);
+    (data || []).forEach(row => {
+      currentFriendCollection[row.id] = {
+        caught: row.caught,
+        condition: row.condition || '', language: row.language || '', notes: row.notes || '',
+        tcg_card_id: row.tcg_card_id, tcg_card_name: row.tcg_card_name,
+        tcg_card_img: row.tcg_card_img, tcg_card_set: row.tcg_card_set,
+        price_manual: row.price_manual,
+      };
+    });
+  } catch(e) {
+    showToast('Error cargando colección', 'red', 2500);
+    return;
+  }
 
-  switchView('pokedex');
-  await loadFromDB();
-  if(allPokemon.length === 0) await loadRegion(0);
-  else { renderGrid(); updateStats(); }
+  // Show friend home state
+  document.getElementById('friends-list-state').style.display = 'none';
+  document.getElementById('friend-home-state').style.display = 'block';
+  document.getElementById('friend-pokedex-state').style.display = 'none';
+  document.getElementById('friend-home-title').textContent = friendName;
+  document.getElementById('friend-pokedex-title').textContent = friendName;
+  friendShowAll = false;
+
+  // Render home content with same layout as own home
+  const wrap = document.getElementById('friend-home-content');
+  wrap.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-big">
+        <div>
+          <div class="big-value green" id="fh-value">€0</div>
+          <div class="big-label">Valor estimado</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="big-value" id="fh-caught">0</div>
+          <div class="big-label">Pokémon</div>
+        </div>
+      </div>
+      <div class="progress-block">
+        <div class="progress-row"><span>Progreso Pokédex</span><span id="fh-pct">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="fh-progress-fill" style="width:0%"></div></div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="mini-stat-val" id="fh-detail">0 ⭐</div><div class="mini-stat-label">Con carta</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" id="fh-missing">0</div><div class="mini-stat-label">Le faltan</div></div>
+      </div>
+    </div>
+    <div class="section-title">⭐ Sus cartas más valiosas</div>
+    <div id="friend-cards-list"></div>
+  `;
+
+  renderFriendHome();
 }
 
-async function exitFriendView() {
-  viewingFriend = null;
-  document.getElementById('friend-banner-wrap').style.display = 'none';
-  document.getElementById('diff-filter-btn').style.display = 'none';
-  currentFilter = 'all';
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.filter-btn')[0].classList.add('active');
-  if(myCollectionCache) {
-    collection = myCollectionCache;
-    myCollectionCache = null;
+function renderFriendHome() {
+  renderHomeFor(currentFriendCollection, {
+    valueEl:'fh-value', caughtEl:'fh-caught', missingEl:'fh-missing',
+    detailEl:'fh-detail', pctEl:'fh-pct', fillEl:'fh-progress-fill',
+    listEl:'friend-cards-list', showAllFlag:'friendShowAll',
+    toggleFn:'toggleFriendShowAll', openFn:null
+  });
+}
+
+function toggleFriendShowAll() {
+  friendShowAll = !friendShowAll;
+  renderFriendHome();
+}
+
+async function switchFriendSubView(sub) {
+  if(sub === 'home') {
+    document.getElementById('friend-home-state').style.display = 'block';
+    document.getElementById('friend-pokedex-state').style.display = 'none';
   } else {
-    await loadFromDB();
+    document.getElementById('friend-home-state').style.display = 'none';
+    document.getElementById('friend-pokedex-state').style.display = 'block';
+    // Ensure pokemon list is loaded
+    if(friendPokemonList.length === 0) await loadFPRegion(0);
+    else { renderFPGrid(); updateFPStats(); }
+    buildFPRegionTabs();
   }
-  renderGrid();
-  updateStats();
+}
+
+function backToFriendsList() {
+  viewingFriend = null;
+  currentFriendCollection = {};
+  document.getElementById('friends-list-state').style.display = 'block';
+  document.getElementById('friend-home-state').style.display = 'none';
+  document.getElementById('friend-pokedex-state').style.display = 'none';
+}
+
+function buildFPRegionTabs() {
+  const c = document.getElementById('fp-region-tabs');
+  if(c.children.length > 0) return;
+  REGIONS.forEach((r, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'rtab' + (i === 0 ? ' active' : '');
+    btn.textContent = r.name;
+    btn.onclick = () => switchFPRegion(i, btn);
+    c.appendChild(btn);
+  });
+}
+
+async function loadFPRegion(idx) {
+  fpCurrentRegion = idx;
+  const region = REGIONS[idx];
+  document.getElementById('loading-overlay').style.display = 'flex';
+  const ids = [];
+  for(let i = region.start; i <= region.end; i++) ids.push(i);
+  friendPokemonList = [];
+  const BATCH = 40;
+  let loaded = 0;
+  for(let b = 0; b < ids.length; b += BATCH) {
+    const batch = ids.slice(b, b + BATCH);
+    document.getElementById('loading-sub').textContent = `Pokémon ${loaded+1}–${Math.min(loaded+BATCH, ids.length)} de ${ids.length}`;
+    const results = await Promise.allSettled(batch.map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r => r.json()).catch(() => null)));
+    results.forEach((res, i) => {
+      const id = batch[i];
+      if(res.status === 'fulfilled' && res.value) {
+        const p = res.value;
+        const sprite = p.sprites?.other?.['official-artwork']?.front_default || p.sprites?.front_default || null;
+        friendPokemonList.push({ id: p.id, name: p.name, sprite, types: p.types.map(t => t.type.name) });
+      } else {
+        friendPokemonList.push({ id, name: `#${id}`, sprite: null, types: [] });
+      }
+      loaded++;
+    });
+  }
+  document.getElementById('loading-overlay').style.display = 'none';
+  renderFPGrid();
+  updateFPStats();
+}
+
+function switchFPRegion(idx, btn) {
+  document.querySelectorAll('#fp-region-tabs .rtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  fpCurrentFilter = 'all';
+  document.querySelectorAll('#friend-pokedex-state .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#friend-pokedex-state .filter-btn')[0].classList.add('active');
+  loadFPRegion(idx);
+}
+
+function setFPFilter(f, btn) {
+  fpCurrentFilter = f;
+  document.querySelectorAll('#friend-pokedex-state .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFPGrid();
+}
+
+function renderFPGrid() {
+  const searchVal = (document.getElementById('fp-search-box')?.value || '').toLowerCase().trim();
+  const grid = document.getElementById('fp-dex-grid');
+  grid.innerHTML = '';
+  let visible = [...friendPokemonList];
+  if(fpCurrentFilter === 'caught') visible = visible.filter(p => currentFriendCollection[p.id]?.caught);
+  else if(fpCurrentFilter === 'missing') visible = visible.filter(p => !currentFriendCollection[p.id]?.caught);
+  else if(fpCurrentFilter === 'detail') visible = visible.filter(p => {
+    const d = currentFriendCollection[p.id]; return d && (d.tcg_card_id || d.tcg_card_img || d.price_manual);
+  });
+  else if(fpCurrentFilter === 'diff') {
+    // Has friend, I don't
+    visible = visible.filter(p => currentFriendCollection[p.id]?.caught && !collection[p.id]?.caught);
+  }
+  if(searchVal) visible = visible.filter(p => {
+    const esName = (ES_NAMES[p.id] || '').toLowerCase();
+    return esName.includes(searchVal) || p.name.toLowerCase().includes(searchVal) || String(p.id).includes(searchVal);
+  });
+  document.getElementById('fp-filter-count').textContent = `${visible.length} Pokémon`;
+  if(visible.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p>Sin resultados</p></div>`;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  visible.forEach(p => {
+    const d = currentFriendCollection[p.id] || {};
+    const caught = !!d.caught;
+    const hasDetail = !!(d.tcg_card_id || d.tcg_card_img || d.price_manual);
+    const esName = ES_NAMES[p.id] || capitalize(p.name);
+    const numStr = String(p.id).padStart(3, '0');
+    const slot = document.createElement('div');
+    slot.className = 'poke-slot ' + (hasDetail ? 'has-detail' : caught ? 'caught' : 'missing');
+    slot.innerHTML = `
+      ${hasDetail ? '<div class="detail-dot"></div>' : ''}
+      <img class="poke-img" src="${p.sprite || ''}" alt="${esName}" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="poke-num">#${numStr}</div>
+      <div class="poke-name">${esName.length > 10 ? esName.substring(0,10)+'…' : esName}</div>
+    `;
+    slot.addEventListener('click', () => openFriendModal(p));
+    frag.appendChild(slot);
+  });
+  grid.appendChild(frag);
+}
+
+function updateFPStats() {
+  const total = friendPokemonList.length;
+  const caught = friendPokemonList.filter(p => currentFriendCollection[p.id]?.caught).length;
+  const detail = friendPokemonList.filter(p => {
+    const d = currentFriendCollection[p.id]; return d && (d.tcg_card_id || d.tcg_card_img || d.price_manual);
+  }).length;
+  const missing = total - caught;
+  const pct = total ? Math.round((caught/total)*100) : 0;
+  let totalValue = 0;
+  Object.values(currentFriendCollection).forEach(d => { if(d.price_manual) totalValue += parseFloat(d.price_manual); });
+  document.getElementById('fp-caught').textContent = caught;
+  document.getElementById('fp-missing').textContent = missing;
+  document.getElementById('fp-detail').textContent = detail;
+  document.getElementById('fp-value').textContent = totalValue > 0 ? `€${totalValue.toFixed(2)}` : '€0';
+  document.getElementById('fp-pct').textContent = pct + '%';
+  document.getElementById('fp-progress-fill').style.width = pct + '%';
+}
+
+function openFriendModal(p) {
+  openModal(p, currentFriendCollection);
 }
 
 // ── CHANGE USERNAME ───────────────────────────────────────────────
@@ -1204,10 +1493,6 @@ function renderGrid(){
   if(currentFilter === 'caught') visible = visible.filter(p => collection[p.id]?.caught);
   else if(currentFilter === 'missing') visible = visible.filter(p => !collection[p.id]?.caught);
   else if(currentFilter === 'detail') visible = visible.filter(p => hasDetail(p.id));
-  else if(currentFilter === 'diff' && myCollectionCache) {
-    // Has friend, I don't
-    visible = visible.filter(p => collection[p.id]?.caught && !myCollectionCache[p.id]?.caught);
-  }
   if(searchVal) visible = visible.filter(p => {
     const esName = (ES_NAMES[p.id] || '').toLowerCase();
     return esName.includes(searchVal) || p.name.toLowerCase().includes(searchVal) || String(p.id).includes(searchVal);
@@ -1308,9 +1593,10 @@ function quickToggle(id, slotEl){
 
 
 // ── POKEMON MODAL ─────────────────────────────────────────────────
-function openModal(p){
+function openModal(p, customCollection){
   selectedId = p.id; selectedPokemon = p; selectedCardData = null;
-  const data = collection[p.id] || {};
+  const collSource = customCollection || collection;
+  const data = collSource[p.id] || {};
   const caught = !!data.caught;
   const esName = ES_NAMES[p.id] || capitalize(p.name);
   const numStr = String(p.id).padStart(3, '0');
