@@ -898,7 +898,7 @@ function renderHome() {
   renderHomeFor(collection, {
     valueEl:'home-value', caughtEl:'home-caught', missingEl:'home-missing',
     detailEl:'home-detail', pctEl:'home-pct', fillEl:'home-progress-fill',
-    listEl:'top-cards-list', showAllFlag:'homeShowAll',
+    listEl:'top-cards-list', showAll: homeShowAll,
     toggleFn:'toggleHomeShowAll', openFn:'openPokemonById'
   });
 }
@@ -938,8 +938,8 @@ function renderHomeFor(coll, ids) {
     return;
   }
 
-  const showAllFlag = window[ids.showAllFlag];
-  const showCount = showAllFlag ? allCards.length : Math.min(10, allCards.length);
+  const showAll = ids.showAll;
+  const showCount = showAll ? allCards.length : Math.min(10, allCards.length);
   const cardsToShow = allCards.slice(0, showCount);
   const hasMore = allCards.length > 10;
 
@@ -960,7 +960,7 @@ function renderHomeFor(coll, ids) {
   html += '</div>';
 
   if(hasMore) {
-    const label = showAllFlag ? `▲ Mostrar menos` : `▼ Ver todas (${allCards.length})`;
+    const label = showAll ? `▲ Mostrar menos` : `▼ Ver todas (${allCards.length})`;
     html += `<button class="show-more-btn" onclick="${ids.toggleFn}()">${label}</button>`;
   }
 
@@ -1224,7 +1224,7 @@ function renderFriendHome() {
   renderHomeFor(currentFriendCollection, {
     valueEl:'fh-value', caughtEl:'fh-caught', missingEl:'fh-missing',
     detailEl:'fh-detail', pctEl:'fh-pct', fillEl:'fh-progress-fill',
-    listEl:'friend-cards-list', showAllFlag:'friendShowAll',
+    listEl:'friend-cards-list', showAll: friendShowAll,
     toggleFn:'toggleFriendShowAll', openFn:null
   });
 }
@@ -1535,6 +1535,38 @@ function hasDetail(id){
   return !!(d && (d.tcg_card_id || d.tcg_card_img || d.price_manual));
 }
 
+function updateSlotById(id) {
+  // Actualizar solo el slot de este Pokémon sin re-renderizar el grid entero
+  // Esto evita que se pierda la posición del scroll
+  const grid = document.getElementById('dex-grid');
+  const slots = grid.querySelectorAll('.poke-slot');
+  const p = allPokemon.find(x => x.id === id);
+  if(!p) return;
+  const esName = ES_NAMES[id] || capitalize(p.name || '');
+  const numStr = String(id).padStart(3, '0');
+  const caught = !!collection[id]?.caught;
+  const detail = hasDetail(id);
+  // Encontrar el slot con este número
+  slots.forEach(slot => {
+    const numEl = slot.querySelector('.poke-num');
+    if(numEl && numEl.textContent === `#${numStr}`) {
+      slot.className = 'poke-slot ' + (detail ? 'has-detail' : caught ? 'caught' : 'missing');
+      slot.innerHTML = `
+        ${detail ? '<div class="detail-dot"></div>' : ''}
+        <img class="poke-img" src="${p.sprite || ''}" alt="${esName}" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="poke-num">#${numStr}</div>
+        <div class="poke-name">${esName.length > 10 ? esName.substring(0,10)+'…' : esName}</div>
+      `;
+      // Volver a añadir el listener
+      let clickTimer = null;
+      slot.addEventListener('click', () => {
+        if(clickTimer){ clearTimeout(clickTimer); clickTimer = null; openModal(p); }
+        else { clickTimer = setTimeout(() => { clickTimer = null; quickToggle(p.id, slot); }, 220); }
+      });
+    }
+  });
+}
+
 function capitalize(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 
 function updateStats(){
@@ -1701,7 +1733,7 @@ async function saveAndClose(){
   }
   collection[selectedId] = update;
   await saveToDB(selectedId);
-  renderGrid();
+  updateSlotById(selectedId);
   updateStats();
   showToast('✓ Guardado', 'green', 1600);
   btn.disabled = false; btn.textContent = 'Guardar';
@@ -1717,26 +1749,55 @@ async function searchCards() {
   wrap.innerHTML = '<div style="text-align:center;padding:14px;color:var(--text-muted);font-size:12px;">🔍 Buscando...</div>';
   try {
     const words = q.split(/\s+/).filter(w => w.length > 0);
+    // Estrategia 1: nombre exacto o wildcards + set/número por palabra
     const andClauses = words.map(w => {
       const safe = w.replace(/"/g, '\\"');
       return `(name:*${safe}* OR number:${safe} OR set.name:*${safe}* OR set.id:${safe.toLowerCase()})`;
     }).join(' ');
     const finalQuery = andClauses || `name:"${q}"`;
-    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(finalQuery)}&pageSize=30`;
+    // Traer hasta 100 cartas y ordenarlas por "rareza" en el cliente
+    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(finalQuery)}&pageSize=100&orderBy=-set.releaseDate`;
     const res = await fetch(url, {headers:{'X-Api-Key': TCG_API_KEY}});
     const data = await res.json();
-    if(!data.data || data.data.length === 0) {
-      const fbUrl = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent('name:*'+q+'*')}&pageSize=30`;
+    let cards = data.data || [];
+
+    // Fallback: solo nombre
+    if(cards.length === 0) {
+      const fbUrl = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent('name:*'+q+'*')}&pageSize=100&orderBy=-set.releaseDate`;
       const res2 = await fetch(fbUrl, {headers:{'X-Api-Key': TCG_API_KEY}});
       const data2 = await res2.json();
-      if(!data2.data || data2.data.length === 0) {
-        wrap.innerHTML = '<div style="text-align:center;padding:10px;color:var(--text-muted);font-size:11px;">Sin resultados — prueba con el código del set (sv9, swsh11) o nombre en inglés</div>';
+      cards = data2.data || [];
+      if(cards.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center;padding:10px;color:var(--text-muted);font-size:11px;">Sin resultados. Prueba con solo el nombre del Pokémon en inglés (ej: Charizard, Mewtwo).</div>';
         return;
       }
-      renderCardResults(data2.data, wrap); return;
     }
-    renderCardResults(data.data, wrap);
+
+    // Ordenar por rareza: Full Arts / Special Illustration / Illustration Rare primero
+    const rarityScore = (r) => {
+      if(!r) return 0;
+      const rr = r.toLowerCase();
+      if(rr.includes('hyper')) return 100;
+      if(rr.includes('special illustration') || rr.includes('sir')) return 95;
+      if(rr.includes('illustration rare') || rr.includes(' ir ') || rr.endsWith(' ir')) return 90;
+      if(rr.includes('gold') || rr.includes('secret')) return 88;
+      if(rr.includes('rainbow')) return 85;
+      if(rr.includes('full art')) return 80;
+      if(rr.includes('character')) return 75;
+      if(rr.includes('alternative') || rr.includes('alt art')) return 78;
+      if(rr.includes('shiny')) return 70;
+      if(rr.includes('ultra')) return 65;
+      if(rr.includes('double rare') || rr === 'rare holo ex' || rr.includes(' ex')) return 55;
+      if(rr.includes('rare holo')) return 40;
+      if(rr.includes('rare')) return 30;
+      if(rr.includes('uncommon')) return 15;
+      return 5;
+    };
+    cards.sort((a,b) => rarityScore(b.rarity) - rarityScore(a.rarity));
+
+    renderCardResults(cards, wrap);
   } catch(e) {
+    console.error(e);
     wrap.innerHTML = '<div style="text-align:center;padding:10px;color:var(--text-muted);font-size:11px;">Error al buscar — comprueba tu conexión</div>';
   }
 }
@@ -1837,7 +1898,7 @@ async function removeCard() {
   const priceInput = document.getElementById('d-price');
   if(priceInput) priceInput.value = '';
   await saveToDB(selectedId);
-  renderGrid(); updateStats();
+  updateSlotById(selectedId); updateStats();
   showToast('Carta quitada', '', 1500);
 }
 
