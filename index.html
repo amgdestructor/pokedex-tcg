@@ -1837,23 +1837,20 @@ async function searchTcgdex(query, lang) {
     const data = await res.json();
     if(!Array.isArray(data) || data.length === 0) return [];
 
-    // Los resultados son "brief" (id, localId, name, image), pero para tener set
-    // y rareza haría falta fetch de cada uno individualmente (demasiadas peticiones).
-    // Deducimos la información del ID (formato "setId-localId")
-    // y usamos la imagen que ya viene.
-    const results = data.slice(0, 60).map(c => {
+    // Filtrar cartas sin imagen y limitar a 60
+    const withImages = data.filter(c => c.image && c.image.trim() !== '').slice(0, 60);
+
+    const results = withImages.map(c => {
       const setId = c.id.split('-')[0] || '';
-      // Imagen: si no tiene extensión, añadimos /high.png para tener HD
-      const imgBase = c.image || '';
-      const imgHigh = imgBase ? imgBase + '/high.webp' : '';
-      const imgLow = imgBase ? imgBase + '/low.webp' : '';
+      const imgHigh = c.image + '/high.webp';
+      const imgLow = c.image + '/low.webp';
       return {
         id: 'tcgdex_' + c.id,
         name: c.name,
         number: c.localId,
         images: { small: imgLow, large: imgHigh },
         set: { name: setId, id: setId, printedTotal: null },
-        rarity: '', // no disponible en brief
+        rarity: '',
         _source: 'tcgdex',
       };
     });
