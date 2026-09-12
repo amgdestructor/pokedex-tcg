@@ -84,7 +84,8 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:var(--text);
 .card-tile{background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:var(--radius-sm);padding:8px 6px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all 0.15s;position:relative;height:100%;}
 .card-tile:hover{border-color:var(--yellow);transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,210,63,0.15);}
 .card-tile-rank{position:absolute;top:4px;left:4px;background:var(--darker);border:1px solid var(--card-border);border-radius:8px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--text-muted);z-index:2;}
-.card-tile-img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:5px;background:var(--darker);}
+.card-tile-imgwrap{width:100%;aspect-ratio:2.5/3.5;border-radius:5px;background:var(--darker);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.card-tile-img{width:100%;height:100%;object-fit:cover;border-radius:5px;}
 .card-tile-name{font-size:10px;font-weight:700;color:var(--text);margin-top:6px;text-align:center;line-height:1.2;width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:24px;}
 .card-tile-price{font-size:13px;font-weight:700;color:var(--yellow);margin-top:auto;padding-top:3px;}
 .card-tile-set{font-size:9px;color:var(--text-muted);margin-top:1px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
@@ -964,7 +965,7 @@ function renderHomeFor(coll, ids) {
     html += `
       <div class="card-tile" ${openFn ? `onclick="${openFn}(${c.pokemonId})"` : ''}>
         <div class="card-tile-rank">#${i+1}</div>
-        <img class="card-tile-img" src="${c.tcg_card_img || ''}" alt="${name}" loading="lazy" onerror="this.style.opacity='0.3'">
+        <div class="card-tile-imgwrap"><img class="card-tile-img" src="${c.tcg_card_img || ''}" alt="${name}" loading="lazy" onerror="this.style.opacity='0.3'"></div>
         <div class="card-tile-name">${name}</div>
         <div class="card-tile-price">€${parseFloat(c.price_manual).toFixed(2)}</div>
         <div class="card-tile-set">${c.tcg_card_set || ''}</div>
@@ -982,22 +983,22 @@ function renderHomeFor(coll, ids) {
 }
 
 async function openPokemonById(id) {
-  switchView('pokedex');
-  if(allPokemon.length === 0) await loadRegion(0);
-  const p = allPokemon.find(x => x.id === id);
-  if(p) openModal(p);
-  else {
-    // Need to load region containing this pokemon
-    const regionIdx = REGIONS.findIndex((r,i) => i > 0 && id >= r.start && id <= r.end);
-    if(regionIdx > 0) {
-      const tabs = document.querySelectorAll('.rtab');
-      if(tabs[regionIdx]) switchRegion(regionIdx, tabs[regionIdx]);
-      setTimeout(() => {
-        const p2 = allPokemon.find(x => x.id === id);
-        if(p2) openModal(p2);
-      }, 1500);
+  // Abrir el modal sin cambiar de pestaña.
+  // Buscamos el pokemon en allPokemon; si no está cargado, lo pedimos suelto.
+  let p = allPokemon.find(x => x.id === id);
+  if(!p) {
+    // Cargar solo ese pokemon de PokeAPI para poder abrir el modal
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+      const data = await res.json();
+      const sprite = data.sprites?.other?.['official-artwork']?.front_default || data.sprites?.front_default || null;
+      p = { id: data.id, name: data.name, sprite, types: data.types.map(t => t.type.name) };
+    } catch(e) {
+      showToast('No se pudo cargar el Pokémon', 'red', 2000);
+      return;
     }
   }
+  openModal(p);
 }
 
 
@@ -1749,6 +1750,7 @@ async function saveAndClose(){
   await saveToDB(selectedId);
   updateSlotById(selectedId);
   updateStats();
+  if(currentView === 'home') renderHome();
   showToast('✓ Guardado', 'green', 1600);
   btn.disabled = false; btn.textContent = 'Guardar';
   closeModal();
@@ -1989,6 +1991,7 @@ async function removeCard() {
   if(priceInput) priceInput.value = '';
   await saveToDB(selectedId);
   updateSlotById(selectedId); updateStats();
+  if(currentView === 'home') renderHome();
   showToast('Carta quitada', '', 1500);
 }
 
